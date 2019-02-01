@@ -52,7 +52,7 @@ export default {
 }
 
 .video-skip-btn {
-  background-color: #dd3111;
+  background-color: #f9675e;
   color: #ffffff;
   border: none;
   outline: none;
@@ -60,5 +60,6 @@ export default {
   -moz-box-shadow: 0 0 4px #ccc;
   -webkit-box-shadow: 0 0 4px #ccc;
   box-shadow: 0 0 4px #ccc;
+  cursor: pointer;
 }
 </style>

@@ -21,12 +21,17 @@ export default {
       url: '',
     };
   },
+  created() {
+    this.sockets.subscribe('vidRequestRes', ({ success }) => {
+      if (success) {
+        this.url = '';
+      }
+    });
+  },
   methods: {
     onEnter() {
       console.log(this.url);
       this.$socket.emit('vid-request', this.url);
-
-      this.url = '';
     }
   },
 }

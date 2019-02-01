@@ -28,8 +28,31 @@ async function getVideoInfo(url) {
   return data;
 }
 
+function syncVideoQueue() {
+  this.emit('queueInit', videoQueue);
+}
+
+function addVideoToQueue(video) {
+  videoQueue.push(video);
+  this.broadcast('queuePush', video);
+}
+
+function popVideoFromQueue() {
+  this.broadcast('queuePop');
+  return videoQueue.shift();
+}
+
+function removeVideoFromQueue(index) {
+  this.broadcast('queueRmv', index);
+  return videoQueue;
+}
+
 async function handleVidRequest(url) {
   console.log(`handleVidRequest(${url})`);
+
+  let success = true;
+  let reason = '';
+
   try {
     url = url.trim();
 
@@ -40,11 +63,14 @@ async function handleVidRequest(url) {
       url: url,
     };
 
-    videoQueue.push(video);
-    console.log(videoQueue);
+    addVideoToQueue(video);
   } catch (ex) {
-    console.error(ex.toString());
+    console.error(`handleVidRequest(${url}) errored: ${ex.toString()}`);
+    success = false;
+    reason = 'You have provided an invalid YouTube URL.';
   }
+
+  this.emit('vidRequestRes', { success, reason });
 }
 
 async function handleSkipRequest(id) {
