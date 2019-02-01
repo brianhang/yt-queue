@@ -28,28 +28,28 @@ async function getVideoInfo(url) {
   return data;
 }
 
-function syncVideoQueue() {
-  this.emit('queueInit', videoQueue);
+function syncVideoQueue(socket) {
+  socket.emit('queueInit', videoQueue);
 }
 
 function addVideoToQueue(video) {
   videoQueue.push(video);
-  this.broadcast('queuePush', video);
+  io.sockets.emit('queuePush', video);
 }
 
 function popVideoFromQueue() {
-  this.broadcast('queuePop');
+  io.sockets.emit('queuePop');
   return videoQueue.shift();
 }
 
 function removeVideoFromQueue(index) {
-  this.broadcast('queueRmv', index);
-  return videoQueue;
+  if (index >= 0 && index < videoQueue.length) {
+    videoQueue.splice(index, 1);
+    io.sockets.emit('queueRmv', index);
+  }
 }
 
 async function handleVidRequest(url) {
-  console.log(`handleVidRequest(${url})`);
-
   let success = true;
   let reason = '';
 
@@ -61,6 +61,7 @@ async function handleVidRequest(url) {
       title: data.title,
       author: data.author_name,
       url: url,
+      thumbnail: data.thumbnail_url,
     };
 
     addVideoToQueue(video);
@@ -73,12 +74,14 @@ async function handleVidRequest(url) {
   this.emit('vidRequestRes', { success, reason });
 }
 
-async function handleSkipRequest(id) {
-
+async function handleSkipRequest(index) {
+  removeVideoFromQueue(index);
 }
 
 io.on('connection', socket => {
   console.log(`${socket.id} has connected`);
   socket.on('vid-request', handleVidRequest);
   socket.on('vid-skip', handleSkipRequest);
+
+  syncVideoQueue(socket);
 });

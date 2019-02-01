@@ -5,11 +5,11 @@
     v-bind:class="{['video-item']: true, ['video-item-hovered']: active}">
     <img
       class="video-thumb"
-      :src="`https://img.youtube.com/vi/${video.id}/0.jpg`"
+      :src="video.thumbnail"
     />
-    <span class="video-name">{{ video.name }}</span>
+    <span class="video-name">{{ video.title }}</span>
 
-    <button class="video-skip-btn" v-show="active">SKIP</button>
+    <button class="video-skip-btn" v-show="active" v-on:click="onClick">SKIP</button>
   </div>
 </template>
 
@@ -17,12 +17,18 @@
 export default {
   name: 'VideoItem',
   props: ['video'],
+
   data() {
     return {
       active: false,
     };
   },
-  
+
+  methods: {
+    onClick() {
+      this.$socket.emit('vid-skip', this.$vnode.key);
+    },
+  },
 }
 </script>
 

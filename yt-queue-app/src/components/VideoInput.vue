@@ -30,7 +30,6 @@ export default {
   },
   methods: {
     onEnter() {
-      console.log(this.url);
       this.$socket.emit('vid-request', this.url);
     }
   },

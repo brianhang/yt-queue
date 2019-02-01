@@ -2,9 +2,9 @@
   <div id="video-queue">
     <h1>Queue</h1>
     <VideoItem
-      v-for="video in queue"
+      v-for="(video, index) in queue"
       v-bind:video="video"
-      :key="video.id"
+      :key="index"
     />
     <p v-if="queue.length === 0">
       There are currently no videos queued up.

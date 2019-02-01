@@ -29,6 +29,7 @@ export default {
     });
 
     this.sockets.subscribe('queueRmv', index => {
+      this.queue.splice(index, 1);
     });
   },
 
