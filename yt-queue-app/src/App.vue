@@ -1,52 +1,8 @@
 <template>
   <div id="app">
-    <div v-if="err !== ''" class="app-err">{{ err }}</div>
-    <VideoInput></VideoInput>
-    <VideoQueue v-bind:queue="queue"></VideoQueue>
+    <router-view/>
   </div>
 </template>
-
-<script>
-import VideoInput from './components/VideoInput.vue';
-import VideoQueue from './components/VideoQueue.vue';
-
-export default {
-  created() {
-    this.sockets.subscribe('vidRequestRes', ({ success, reason }) => {
-      this.err = success ? '' : reason;
-    });
-
-    this.sockets.subscribe('queueInit', queue => {
-      this.queue = queue;
-    });
-
-    this.sockets.subscribe('queuePush', video => {
-      this.queue.push(video);
-    });
-
-    this.sockets.subscribe('queuePop', () => {
-      this.queue.pop();
-    });
-
-    this.sockets.subscribe('queueRmv', index => {
-      this.queue.splice(index, 1);
-    });
-  },
-
-  data() {
-    return {
-      err: '',
-      queue: [],
-    }
-  },
-
-  name: 'app',
-  components: {
-    VideoInput,
-    VideoQueue
-  }
-}
-</script>
 
 <style>
 @import url('https://fonts.googleapis.com/css?family=Roboto');

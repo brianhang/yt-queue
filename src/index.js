@@ -15,6 +15,7 @@ const io = require('socket.io')(server);
 io.set('origins', '*:*');
 
 let videoQueue = [];
+let curVideo;
 
 async function getVideoInfo(url) {
   const API_URL = 'https://youtube.com/oembed/?format=json&url=';
@@ -28,6 +29,26 @@ async function getVideoInfo(url) {
   return data;
 }
 
+function getVideoIdFromYouTubeUrl(url) {
+  const ID_PATTERN = /(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/;
+  const id = url.match(ID_PATTERN);
+  return id ? id[1] : null;
+}
+
+function playVideoFromQueue() {
+  if (videoQueue.length === 0) {
+    return;
+  }
+
+  const video = videoQueue[0];
+  const id = getVideoIdFromYouTubeUrl(video.url);
+
+  if (id) {
+    curVideo = video;
+    io.sockets.emit('vid-play', id);
+  }
+}
+
 function syncVideoQueue(socket) {
   socket.emit('queueInit', videoQueue);
 }
@@ -35,6 +56,8 @@ function syncVideoQueue(socket) {
 function addVideoToQueue(video) {
   videoQueue.push(video);
   io.sockets.emit('queuePush', video);
+
+  onVideoAddedToQueue(video);
 }
 
 function popVideoFromQueue() {
@@ -46,6 +69,21 @@ function removeVideoFromQueue(index) {
   if (index >= 0 && index < videoQueue.length) {
     videoQueue.splice(index, 1);
     io.sockets.emit('queueRmv', index);
+  }
+}
+
+function onVideoAddedToQueue(video) {
+  if (videoQueue.length === 1) {
+    playVideoFromQueue();
+  }
+}
+
+function onVideoFinished(video) {
+  popVideoFromQueue();
+  playVideoFromQueue();
+
+  if (videoQueue.length === 0) {
+    io.sockets.emit('vid-stop');
   }
 }
 
@@ -75,13 +113,20 @@ async function handleVidRequest(url) {
 }
 
 async function handleSkipRequest(index) {
-  removeVideoFromQueue(index);
+  onVideoFinished(curVideo);
+}
+
+function handleVidFinish() {
+  if (curVideo) {
+    onVideoFinished(curVideo);
+  }
 }
 
 io.on('connection', socket => {
   console.log(`${socket.id} has connected`);
   socket.on('vid-request', handleVidRequest);
   socket.on('vid-skip', handleSkipRequest);
+  socket.on('vid-finish', handleVidFinish);
 
   syncVideoQueue(socket);
 });
